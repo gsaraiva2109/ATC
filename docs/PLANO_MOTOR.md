@@ -57,7 +57,7 @@ Validações, todas com `MTFormatError("linha N: ...")`:
 - Aviso opcional para regras saindo de estados finais (ignoradas na execução).
 - Arquivo inexistente ou vazio (`FileNotFoundError` convertido em erro claro).
 
-Decisão sobre símbolos multi-caractere: aceitar tokens de qualquer tamanho, mas o alfabeto de **entrada** é fornecido como string e dividido em símbolos de 1 caractere (a entrada `111*11` é lida caractere a caractere).
+Decisão sobre símbolos: **símbolos da fita têm 1 caractere** (a entrada `111*11` é lida caractere a caractere e a fita vira uma string simples no trace). Nomes de estados podem ter qualquer tamanho.
 
 ## 4. Execução (`runner.py`)
 
