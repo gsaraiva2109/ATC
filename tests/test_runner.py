@@ -1,6 +1,6 @@
 import pytest
 
-from tm import Execution, InputError, Status, parse_machine, run
+from tm import Execution, Status, parse_machine, run
 
 # troca todos os 'a' por 'X' e aceita ao ver o branco
 REPLACE = """\
@@ -103,20 +103,33 @@ def test_result_unavailable_until_iterated():
 
 def test_invalid_input_symbols():
     machine = parse_machine(ONLY_A)
-    with pytest.raises(InputError, match="'c'"):
-        run(machine, "abc")
-    with pytest.raises(InputError, match="'X'"):
-        run(machine, "aXa")
+    for word, symbol in [("abc", "c"), ("aXa", "X")]:
+        result = run(machine, word)
+        assert result.status is Status.REJECTED
+        assert result.steps == 0
+        assert result.state not in machine.finals
+        assert "alfabeto de entrada" in result.reason
+        assert repr(symbol) in result.reason
 
 
 def test_blank_in_input_is_invalid():
-    with pytest.raises(InputError):
-        run(parse_machine(ONLY_A), "aBa")
+    machine = parse_machine(ONLY_A)
+    result = run(machine, "aBa")
+    assert result.status is Status.REJECTED
+    assert result.steps == 0
+    assert result.state not in machine.finals
+    assert "alfabeto de entrada" in result.reason
+    assert "'B'" in result.reason
 
 
 def test_empty_input():
-    with pytest.raises(InputError, match="vazia"):
-        run(parse_machine(ONLY_A), "")
+    # ONLY_A reconhece a*: inclui a palavra vazia.
+    # A regra (q0, B) leva ao estado final qf.
+    result = run(parse_machine(ONLY_A), "")
+    assert result.status is Status.ACCEPTED
+    assert result.state == "qf"
+    assert result.steps == 1
+    assert result.tape == ""
 
 
 def test_negative_step_limit():

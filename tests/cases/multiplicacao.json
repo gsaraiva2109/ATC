@@ -1,0 +1,62 @@
+[
+  {
+    "entrada": "1*1",
+    "resultado_esperado": "1",
+    "aceita": true
+  },
+  {
+    "entrada": "1*11",
+    "resultado_esperado": "11",
+    "aceita": true
+  },
+  {
+    "entrada": "11*1",
+    "resultado_esperado": "11",
+    "aceita": true
+  },
+  {
+    "entrada": "111*11",
+    "resultado_esperado": "111111",
+    "aceita": true
+  },
+  {
+    "entrada": "11*111",
+    "resultado_esperado": "111111",
+    "aceita": true
+  },
+  {
+    "entrada": "1111*1111",
+    "resultado_esperado": "1111111111111111",
+    "aceita": true
+  },
+  {
+    "entrada": "",
+    "resultado_esperado": null,
+    "aceita": false
+  },
+  {
+    "entrada": "111",
+    "resultado_esperado": null,
+    "aceita": false
+  },
+  {
+    "entrada": "1**1",
+    "resultado_esperado": null,
+    "aceita": false
+  },
+  {
+    "entrada": "*11",
+    "resultado_esperado": null,
+    "aceita": false
+  },
+  {
+    "entrada": "11*",
+    "resultado_esperado": null,
+    "aceita": false
+  },
+  {
+    "entrada": "1a1*1",
+    "resultado_esperado": null,
+    "aceita": false
+  }
+]
