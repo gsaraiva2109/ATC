@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterator
 
-from .errors import InputError
 from .machine import TuringMachine
 from .tape import Tape
 
@@ -37,13 +36,7 @@ class Execution:
     (inclusive a inicial); ao fim da iteração `result` está disponível."""
 
     def __init__(self, machine: TuringMachine, word: str, max_steps: int = DEFAULT_MAX_STEPS):
-        if not word:
-            raise InputError("a palavra de entrada não pode ser vazia")
         invalid = sorted({s for s in word if s not in machine.input_alphabet})
-        if invalid:
-            raise InputError(
-                f"símbolos fora do alfabeto de entrada: {', '.join(repr(s) for s in invalid)}"
-            )
         if max_steps < 0:
             raise ValueError("max_steps não pode ser negativo")
         self.machine = machine
@@ -53,6 +46,10 @@ class Execution:
         self.state = machine.start
         self.steps = 0
         self.result: Result | None = None
+        self._input_error = (
+            f"símbolos fora do alfabeto de entrada: {', '.join(repr(s) for s in invalid)}"
+            if invalid else None
+        )
 
     def _snapshot(self) -> Snapshot:
         text, head = self.tape.window()
@@ -65,6 +62,9 @@ class Execution:
         machine = self.machine
         while True:
             yield self._snapshot()
+            if self._input_error is not None:
+                self._finish(Status.REJECTED, self._input_error)
+                return
             if self.state in machine.finals:
                 self._finish(Status.ACCEPTED, f"parou no estado final {self.state}")
                 return

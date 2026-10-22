@@ -1,0 +1,59 @@
+; Lista de Estados
+q_inicio,q_primeiro,q_valida,q_segundo,q_volta,q_escolhe,q_busca,q_copia,q_anexa,q_produto,q_retorna,q_restaura,q_reinicia,q_apaga_esq,q_apaga_dir,q_fim
+; Alfabeto de Entrada
+1,*
+; Alfabeto da Fita
+1,*,X,Y,#,B
+; Simbolo de Branco
+B
+; Estado Inicial
+q_inicio
+; Estados Finais (parada do transdutor)
+q_fim
+
+; Formato: origem, le, escreve, direcao [R/L/S], destino
+; Entrada: 1^n * 1^m, com n,m >= 1. Fatores vazios sao invalidos.
+; Transicao ausente em estado nao final significa rejeicao.
+
+; 1. Valida os operandos e cria # antes da area do produto.
+q_inicio, 1, 1, R, q_primeiro
+q_primeiro, 1, 1, R, q_primeiro
+q_primeiro, *, *, R, q_valida
+q_valida, 1, 1, R, q_segundo
+q_segundo, 1, 1, R, q_segundo
+q_segundo, B, #, L, q_volta
+q_volta, 1, 1, L, q_volta
+q_volta, *, *, L, q_volta
+q_volta, B, B, R, q_escolhe
+
+; 2. Marca um 1 do primeiro operando com X.
+q_escolhe, X, X, R, q_escolhe
+q_escolhe, 1, X, R, q_busca
+q_escolhe, *, B, L, q_apaga_esq
+q_busca, 1, 1, R, q_busca
+q_busca, *, *, R, q_copia
+
+; 3. Copia o segundo operando: marca 1 com Y e anexa 1 ao produto.
+q_copia, 1, Y, R, q_anexa
+q_copia, #, #, L, q_restaura
+q_anexa, 1, 1, R, q_anexa
+q_anexa, #, #, R, q_anexa
+q_anexa, B, 1, L, q_produto
+q_produto, 1, 1, L, q_produto
+q_produto, #, #, L, q_retorna
+q_retorna, 1, 1, L, q_retorna
+q_retorna, Y, Y, R, q_copia
+
+; 4. Restaura Y para 1 e volta ao primeiro operando.
+q_restaura, Y, 1, L, q_restaura
+q_restaura, *, *, L, q_reinicia
+q_reinicia, 1, 1, L, q_reinicia
+q_reinicia, X, X, L, q_reinicia
+q_reinicia, B, B, R, q_escolhe
+
+; 5. Apaga os operandos e #. So o produto fica na fita.
+q_apaga_esq, X, B, L, q_apaga_esq
+q_apaga_esq, B, B, R, q_apaga_dir
+q_apaga_dir, B, B, R, q_apaga_dir
+q_apaga_dir, 1, B, R, q_apaga_dir
+q_apaga_dir, #, B, R, q_fim

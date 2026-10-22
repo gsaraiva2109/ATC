@@ -3,4 +3,5 @@ class MTFormatError(Exception):
 
 
 class InputError(Exception):
-    """Palavra de entrada inválida para a máquina."""
+    """Mantida por compatibilidade; o runner retorna REJECTED para entrada inválida."""
+
