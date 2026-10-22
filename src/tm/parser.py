@@ -1,4 +1,5 @@
 from pathlib import Path
+import unicodedata
 
 from .errors import MTFormatError
 from .machine import Rule, TuringMachine
@@ -37,7 +38,65 @@ def _name_list(line: tuple[int, str], what: str) -> list[str]:
     return items
 
 
+def _missing_header_value(text: str) -> tuple[int, str] | None:
+    """Usa os títulos conhecidos como pistas para localizar definições apagadas.
+
+    Só é consultada quando a leitura por posição falha. Comentários continuam
+    opcionais e linhas vazias antes de um valor válido continuam permitidas.
+    """
+    pending: tuple[int, str] | None = None
+    empty_line: int | None = None
+    for number, raw in enumerate(text.splitlines(), start=1):
+        line = raw.strip()
+        if not line:
+            if pending is not None and empty_line is None:
+                empty_line = number
+            continue
+        if not line.startswith(";"):
+            pending = None
+            empty_line = None
+            continue
+        normalized = " ".join(
+            "".join(
+                char for char in unicodedata.normalize("NFD", line[1:].lower())
+                if not unicodedata.combining(char)
+            ).split()
+        )
+        heading = None
+        for label in HEADERS:
+            key = "".join(
+                char for char in unicodedata.normalize("NFD", label)
+                if not unicodedata.combining(char)
+            )
+            if normalized == key or normalized.startswith(key + " ("):
+                heading = label
+                break
+        boundary = heading is not None or normalized.startswith(("regras", "formato:"))
+        if boundary and pending is not None:
+            return empty_line or pending[0] + 1, pending[1]
+        if heading is not None:
+            pending = (number, heading)
+            empty_line = None
+    if pending is not None:
+        return empty_line or pending[0] + 1, pending[1]
+    return None
+
+
 def parse_machine(text: str) -> TuringMachine:
+    """Lê por posição e, em caso de erro, procura um campo ausente nos títulos."""
+    try:
+        return _parse_machine(text)
+    except MTFormatError:
+        missing = _missing_header_value(text)
+        if missing is not None:
+            number, label = missing
+            raise MTFormatError(
+                f"linha {number}: definição de '{label}' ausente ou vazia"
+            ) from None
+        raise
+
+
+def _parse_machine(text: str) -> TuringMachine:
     """Interpreta o conteúdo de um arquivo de definição de MT.
 
     Linhas em branco e linhas iniciadas por ';' são ignoradas. As seis

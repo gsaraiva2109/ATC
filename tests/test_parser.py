@@ -127,3 +127,37 @@ def test_comments_and_blank_lines_keep_real_line_numbers():
     text = "; c\n\nq0,qf\na\na,B\nB\nq0\nqf\n\nq0, z, a, R, qf\n"
     with pytest.raises(MTFormatError, match="linha 10"):
         parse_machine(text)
+
+
+@pytest.mark.parametrize(
+    "line_number, label",
+    [(2, "lista de estados"), (4, "alfabeto de entrada"),
+     (6, "alfabeto da fita"), (8, "símbolo de branco"),
+     (10, "estado inicial"), (12, "estados finais")],
+)
+@pytest.mark.parametrize("replacement", ["", "   "])
+def test_erased_header_reports_its_own_line(line_number, label, replacement):
+    lines = VALID.splitlines()
+    lines[line_number - 1] = replacement
+    with pytest.raises(MTFormatError) as error:
+        parse_machine("\n".join(lines))
+    assert str(error.value) == (
+        f"linha {line_number}: definição de '{label}' ausente ou vazia"
+    )
+
+
+def test_blank_separator_before_header_value_remains_allowed():
+    text = VALID.replace("; Simbolo de Branco\nB", "; Simbolo de Branco\n\nB")
+    assert parse_machine(text).blank == "B"
+
+
+def test_incorrect_value_still_reports_value_line():
+    text = VALID.replace("; Simbolo de Branco\nB", "; Simbolo de Branco\nBB")
+    with pytest.raises(MTFormatError, match="linha 8: .*1 caractere"):
+        parse_machine(text)
+
+
+def test_header_diagnostics_do_not_require_comment_accents():
+    text = VALID.replace("; Simbolo de Branco\nB", "; Símbolo de Branco\n")
+    with pytest.raises(MTFormatError, match="linha 8: .*símbolo de branco"):
+        parse_machine(text)
